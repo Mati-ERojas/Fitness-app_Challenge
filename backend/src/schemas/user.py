@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     def validate_names(cls, value: str) -> str:
         value = value.strip()
         if not value:
-            raise ValueError("El campo no puede estar vacío")
+            raise ValueError("The field cannot be empty or whitespace")
         return value
 
     @field_validator("terms_accepted")

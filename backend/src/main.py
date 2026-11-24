@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.settings import settings
 from src.database import engine
 from sqlalchemy import text
-from src.routers import health
+from src.routers import auth, health
 
 
 @asynccontextmanager
@@ -37,6 +37,7 @@ app.add_middleware(
 
 app.include_router(health.router, prefix=settings.API_V1_STR)
 app.include_router(health.router)  # Root /health alias if needed
+app.include_router(auth.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")
