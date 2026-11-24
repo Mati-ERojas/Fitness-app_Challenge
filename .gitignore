@@ -1,0 +1,39 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+!.env.example
+AGENTS.md
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ruff
+.ruff_cache/
+
+# Node
+node_modules/
+.expo/
+dist/
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+
+# Operating system
+.DS_Store
+Thumbs.db
