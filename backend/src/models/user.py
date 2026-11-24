@@ -1,9 +1,14 @@
 from datetime import datetime
 import uuid
+from typing import TYPE_CHECKING
+
 from sqlalchemy import DateTime, String, text, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
+
+if TYPE_CHECKING:
+    from src.models.session import UserSession
 
 
 class User(Base):
@@ -23,6 +28,12 @@ class User(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+    # Relationship to UserSession
+    sessions: Mapped[list["UserSession"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

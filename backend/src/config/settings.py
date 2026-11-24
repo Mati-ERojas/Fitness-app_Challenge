@@ -12,6 +12,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    SESSION_EXPIRE_DAYS: int = 7
 
 
 settings = Settings()
