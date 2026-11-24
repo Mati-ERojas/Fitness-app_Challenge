@@ -23,7 +23,12 @@ class UserService:
         return pwd_context.verify(plain_password, hashed_password)
 
     @staticmethod
-    def create_user(db: Session, user_in: UserCreate) -> User:
+    def create_user(
+        db: Session,
+        user_in: UserCreate,
+        *,
+        commit: bool = True,
+    ) -> User:
         normalized_email = UserService.normalize_email(user_in.email)
         
         # Check if email already exists using select() and db.scalar()
@@ -44,8 +49,11 @@ class UserService:
 
         try:
             db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
+            if commit:
+                db.commit()
+                db.refresh(db_user)
+            else:
+                db.flush()
         except IntegrityError:
             db.rollback()
             raise ValueError("Email already registered")
