@@ -80,7 +80,7 @@ Antes de comenzar, es necesario contar con:
 
 ```powershell
 git clone https://github.com/Mati-ERojas/Fitness-app_Challenge.git
-cd fitness-app
+cd fitness-app_challenge 
 ```
 
 ### 2. Configurar el backend
