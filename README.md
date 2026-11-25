@@ -79,7 +79,7 @@ Antes de comenzar, es necesario contar con:
 ### 1. Clonar el repositorio
 
 ```powershell
-git clone https://github.com/Mati-ERojas/Fitness-app_Challenge/tree/main
+git clone https://github.com/Mati-ERojas/Fitness-app_Challenge.git
 cd fitness-app
 ```
 
