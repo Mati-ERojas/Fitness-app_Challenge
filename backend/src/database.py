@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-
 from src.config.settings import settings
 
 connect_args = {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}

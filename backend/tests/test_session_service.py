@@ -1,11 +1,10 @@
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
 from src.config.settings import settings
 from src.database import Base
 from src.models.session import UserSession
@@ -61,7 +60,7 @@ def _make_session(db_session, user_id, *, expires_at, revoked_at=None, token="te
 def test_create_session_persists_only_token_hash(db_session, user, monkeypatch):
     raw_token = "opaque-session-token"
     monkeypatch.setattr("src.services.session.secrets.token_urlsafe", lambda _: raw_token)
-    before_create = datetime.now(timezone.utc)
+    before_create = datetime.now(UTC)
 
     returned_token, session = SessionService.create_session(db_session, user)
 
@@ -76,7 +75,7 @@ def test_create_session_persists_only_token_hash(db_session, user, monkeypatch):
     assert session.revoked_at is None
     expires_at = SessionService._normalize_utc(session.expires_at)
     assert before_create + timedelta(days=settings.SESSION_EXPIRE_DAYS) <= expires_at
-    assert expires_at <= datetime.now(timezone.utc) + timedelta(
+    assert expires_at <= datetime.now(UTC) + timedelta(
         days=settings.SESSION_EXPIRE_DAYS
     )
 
@@ -85,7 +84,7 @@ def test_get_valid_session_returns_unrevoked_unexpired_session(db_session, user)
     session = _make_session(
         db_session,
         user.id,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
     )
 
     assert SessionService.get_valid_session(db_session, "test-token").id == session.id # type: ignore
@@ -94,11 +93,11 @@ def test_get_valid_session_returns_unrevoked_unexpired_session(db_session, user)
 @pytest.mark.parametrize(
     ("expires_at", "revoked_at", "token"),
     [
-        (datetime.now(timezone.utc) + timedelta(days=1), None, "missing-token"),
-        (datetime.now(timezone.utc) - timedelta(seconds=1), None, "expired-token"),
+        (datetime.now(UTC) + timedelta(days=1), None, "missing-token"),
+        (datetime.now(UTC) - timedelta(seconds=1), None, "expired-token"),
         (
-            datetime.now(timezone.utc) + timedelta(days=1),
-            datetime.now(timezone.utc),
+            datetime.now(UTC) + timedelta(days=1),
+            datetime.now(UTC),
             "revoked-token",
         ),
     ],
@@ -122,7 +121,7 @@ def test_revoke_session_is_persisted_and_idempotent(db_session, user):
     session = _make_session(
         db_session,
         user.id,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
     )
 
     SessionService.revoke_session(db_session, session)
@@ -131,21 +130,21 @@ def test_revoke_session_is_persisted_and_idempotent(db_session, user):
     db_session.refresh(session)
 
     assert SessionService._normalize_utc(session.revoked_at) == first_revoked_at # type: ignore
-    assert first_revoked_at.tzinfo == timezone.utc
+    assert first_revoked_at.tzinfo == UTC
 
 
 def test_revoke_all_user_sessions_only_revokes_active_sessions(db_session, user):
     active = _make_session(
         db_session,
         user.id,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
         token="active-token",
     )
-    already_revoked_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    already_revoked_at = datetime.now(UTC) - timedelta(hours=1)
     revoked = _make_session(
         db_session,
         user.id,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
         revoked_at=already_revoked_at,
         token="revoked-token",
     )
@@ -161,7 +160,7 @@ def test_revoke_all_user_sessions_only_revokes_active_sessions(db_session, user)
     other_active = _make_session(
         db_session,
         other_user.id,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
         token="other-active-token",
     )
 

@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
-
 from src.database import Base
 from src.dependencies.database import get_db
 from src.models.session import UserSession

@@ -1,8 +1,7 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from pwdlib import PasswordHash
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy.orm import Session
 from src.models.user import User
 from src.schemas.user import UserCreate
 

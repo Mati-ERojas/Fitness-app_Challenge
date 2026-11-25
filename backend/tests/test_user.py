@@ -1,11 +1,9 @@
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from pydantic import ValidationError
-
 from src.database import Base
-from src.models.user import User
 from src.schemas.user import UserCreate
 from src.services.user import UserService
 

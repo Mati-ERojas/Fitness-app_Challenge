@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr
-
 from src.schemas.user import UserResponse
 
 

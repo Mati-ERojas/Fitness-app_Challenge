@@ -1,7 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-
 from src.services.rate_limiter import RateLimiter
 
 

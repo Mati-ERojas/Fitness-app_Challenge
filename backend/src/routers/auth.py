@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
-
 from src.dependencies.auth import get_current_session, get_current_user
 from src.dependencies.database import get_db
 from src.models.session import UserSession
@@ -9,7 +8,6 @@ from src.schemas.auth import AuthResponse, LoginRequest
 from src.schemas.user import UserCreate, UserResponse
 from src.services.auth import AuthService
 from src.services.rate_limiter import login_rate_limiter
-
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

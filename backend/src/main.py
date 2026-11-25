@@ -1,11 +1,14 @@
+import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from sqlalchemy import text
 from src.config.settings import settings
 from src.database import engine
-from sqlalchemy import text
 from src.routers import auth, health
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -14,11 +17,12 @@ async def lifespan(app: FastAPI):
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
-        print("Database connection successfully verified.")
-    except Exception as e:
-        print(f"Warning: Could not connect to database on startup: {e}")
+        logger.info("Database connection successfully verified.")
+    except Exception:
+        logger.exception("Could not connect to database on startup")
     yield
     # Shutdown: Clean up resources if needed
+
 
 
 app = FastAPI(

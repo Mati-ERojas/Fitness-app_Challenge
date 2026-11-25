@@ -1,10 +1,9 @@
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
-
 from src.config.settings import settings
 from src.models.session import UserSession
 from src.models.user import User
@@ -15,8 +14,8 @@ class SessionService:
     def _normalize_utc(value: datetime) -> datetime:
         """Treat SQLite's naive datetimes as UTC and normalize aware values."""
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
 
     @staticmethod
     def create_session(
@@ -27,7 +26,7 @@ class SessionService:
     ) -> tuple[str, UserSession]:
         token = secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         db_session = UserSession(
             user_id=user.id,
             token_hash=token_hash,
@@ -56,7 +55,7 @@ class SessionService:
             return None
 
         expires_at = SessionService._normalize_utc(db_session.expires_at)
-        if expires_at <= datetime.now(timezone.utc):
+        if expires_at <= datetime.now(UTC):
             return None
 
         return db_session
@@ -66,7 +65,7 @@ class SessionService:
         if session.revoked_at is not None:
             return
 
-        session.revoked_at = datetime.now(timezone.utc)
+        session.revoked_at = datetime.now(UTC)
         try:
             db.commit()
         except Exception:
@@ -75,7 +74,7 @@ class SessionService:
 
     @staticmethod
     def revoke_all_user_sessions(db: Session, user_id: str) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         stmt = (
             update(UserSession)
             .where(

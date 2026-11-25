@@ -1,15 +1,15 @@
-import pytest
-from datetime import datetime, timezone, timedelta
 import hashlib
 import secrets
-from sqlalchemy import create_engine, select, event, text
+from datetime import UTC, datetime, timedelta
+
+import pytest
+from sqlalchemy import create_engine, event, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from sqlalchemy.exc import IntegrityError
-
 from src.database import Base
-from src.models.user import User
 from src.models.session import UserSession
+from src.models.user import User
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_create_session_success(db_session):
     raw_token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
 
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    expires_at = datetime.now(UTC) + timedelta(days=7)
 
     # 3. Create session
     session = UserSession(
@@ -70,7 +70,7 @@ def test_create_session_success(db_session):
     assert session.user_id == user.id
     assert session.token_hash == token_hash
     assert session.revoked_at is None
-    assert session.expires_at.replace(tzinfo=timezone.utc) == expires_at
+    assert session.expires_at.replace(tzinfo=UTC) == expires_at
     assert len(user.sessions) == 1
     assert user.sessions[0].id == session.id
 
@@ -87,7 +87,7 @@ def test_token_hash_uniqueness(db_session):
     db_session.commit()
 
     token_hash = hashlib.sha256(b"same_token").hexdigest()
-    expires_at = datetime.now(timezone.utc) + timedelta(days=1)
+    expires_at = datetime.now(UTC) + timedelta(days=1)
 
     session_1 = UserSession(
         user_id=user.id,
@@ -122,7 +122,7 @@ def test_user_session_relationship_bidirectional(db_session):
 
     # 2. Create session without assigning user_id directly
     token_hash = hashlib.sha256(b"david_token").hexdigest()
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    expires_at = datetime.now(UTC) + timedelta(days=7)
     session = UserSession(
         token_hash=token_hash,
         expires_at=expires_at,
@@ -171,7 +171,7 @@ def test_sql_cascade_delete_user_sessions(db_session):
     session = UserSession(
         user_id=user.id,
         token_hash=token_hash,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
     )
     db_session.add(session)
     db_session.commit()
@@ -205,7 +205,7 @@ def test_cascade_delete_user_sessions(db_session):
     session = UserSession(
         user_id=user.id,
         token_hash=token_hash,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        expires_at=datetime.now(UTC) + timedelta(days=1),
     )
     db_session.add(session)
     db_session.commit()

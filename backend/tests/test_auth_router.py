@@ -1,13 +1,11 @@
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from sqlalchemy import create_engine
-
 from src.database import Base
 from src.dependencies.database import get_db
 from src.main import app
@@ -15,7 +13,6 @@ from src.models.session import UserSession
 from src.models.user import User
 from src.routers import auth as auth_router_module
 from src.services.rate_limiter import RateLimiter
-
 
 API_PREFIX = "/api/v1/auth"
 TEST_EMAIL = "alex@example.com"
@@ -256,7 +253,7 @@ def test_me_with_revoked_token_returns_401(client, test_session_factory):
             select(UserSession).where(UserSession.token_hash == token_hash)
         )
         assert session is not None
-        session.revoked_at = datetime.now(timezone.utc)
+        session.revoked_at = datetime.now(UTC)
         db.commit()
 
     response = client.get(
