@@ -9,7 +9,6 @@ venv/
 # Environment
 .env
 .env.*
-!.env.example
 AGENTS.md
 
 # Database

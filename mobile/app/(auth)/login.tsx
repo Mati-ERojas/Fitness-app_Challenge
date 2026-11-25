@@ -43,7 +43,7 @@ function getLoginErrorMessage(error: unknown): string {
         case 422:
             return "Revisa el correo y la contraseña ingresados.";
         case 429:
-            return "Demasiados intentos. Esperá un momento antes de volver a intentar.";
+            return "Demasiados intentos. Intente de nuevo más tarde.";
         default:
             return error.response
                 ? "No pudimos iniciar sesión. Intentá nuevamente."

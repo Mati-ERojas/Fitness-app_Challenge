@@ -46,7 +46,7 @@ function getRegisterErrorMessage(error: unknown): string {
 
     switch (error.response?.status) {
         case 409:
-            return "Ya existe una cuenta con ese correo electrónico. Probá iniciar sesión.";
+            return "Ya existe una cuenta con ese correo electrónico. Probá iniciando sesión.";
         case 422:
             return "Revisá los datos ingresados y aceptá los términos y condiciones.";
         default:

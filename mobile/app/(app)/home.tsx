@@ -200,7 +200,6 @@ export default function HomeScreen() {
                                 </Text>
                             </View>
                         </View>
-
                     </View>
 
                     <View style={styles.welcome}>
@@ -386,7 +385,12 @@ export default function HomeScreen() {
                                     },
                                 ]}
                             >
-                                <View style={styles.areaTop}>
+                                <View
+                                    style={[
+                                        styles.areaTop,
+                                        { backgroundColor: "none" },
+                                    ]}
+                                >
                                     <Text
                                         style={[
                                             styles.areaNumber,
@@ -502,7 +506,10 @@ export default function HomeScreen() {
                                     <Text
                                         style={[
                                             styles.accountEmail,
-                                            { color: theme.colors.textSecondary },
+                                            {
+                                                color: theme.colors
+                                                    .textSecondary,
+                                            },
                                         ]}
                                     >
                                         {authenticatedUser.email}
@@ -519,12 +526,20 @@ export default function HomeScreen() {
                                         enabledStyle={{
                                             textColor: "#FFFFFF",
                                             backgroundColor: "#991B1B",
-                                            backgroundGradient: [
-                                                "#B91C1C",
-                                                "#991B1B",
-                                                "#7F1D1D",
-                                            ],
-                                            borderColor: "rgba(255, 255, 255, 0.38)",
+                                            backgroundGradient:
+                                                theme.colorScheme === "dark"
+                                                    ? [
+                                                          "#B91C1C",
+                                                          "#991B1B",
+                                                          "#7F1D1D",
+                                                      ]
+                                                    : [
+                                                          "#e82525",
+                                                          "rgb(211, 22, 22)",
+                                                          "#c21111",
+                                                      ],
+                                            borderColor:
+                                                "rgba(255, 255, 255, 0.38)",
                                             borderWidth: 1,
                                             borderRadius: theme.radii.pill,
                                         }}
