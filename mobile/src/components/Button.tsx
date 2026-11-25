@@ -109,7 +109,12 @@ export function Button({
             duration: theme.motion.transitionDuration,
             reduceMotion: ReduceMotion.System,
         });
-    }, [disabledProgress, isDisabled, reduceMotion, theme.motion.transitionDuration]);
+    }, [
+        disabledProgress,
+        isDisabled,
+        reduceMotion,
+        theme.motion.transitionDuration,
+    ]);
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
@@ -138,7 +143,10 @@ export function Button({
         color: interpolateColor(
             disabledProgress.value,
             [0, 1],
-            [enabledAppearance.textColor as string, disabledAppearance.textColor as string],
+            [
+                enabledAppearance.textColor as string,
+                disabledAppearance.textColor as string,
+            ],
         ),
     }));
     const enabledGradientStyle = useAnimatedStyle(() => ({
@@ -230,7 +238,10 @@ export function Button({
                     {disabledAppearance.backgroundGradient && (
                         <Animated.View
                             pointerEvents="none"
-                            style={[styles.gradientLayer, disabledGradientStyle]}
+                            style={[
+                                styles.gradientLayer,
+                                disabledGradientStyle,
+                            ]}
                         >
                             <LinearGradient
                                 colors={disabledAppearance.backgroundGradient}

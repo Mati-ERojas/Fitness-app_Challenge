@@ -1,21 +1,61 @@
 import { Formik } from "formik";
-import { View } from "react-native";
+import axios from "axios";
+import { useRouter } from "expo-router";
+import { useRef } from "react";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { AuthFormField } from "@/features/auth/components/AuthFormField";
 import { AuthScreenLayout } from "@/features/auth/components/AuthScreenLayout";
 import { loginSchema } from "@/features/auth/schemas/authSchemas";
+import { login } from "@/features/auth/services/authService";
 import type { LoginFormValues } from "@/features/auth/types/forms";
 import { normalizeEmail } from "@/features/auth/utils/normalizeEmail";
+import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import {
+    tokenStorage,
+    TokenStorageError,
+} from "@/services/storage/tokenStorage";
 
 const initialValues: LoginFormValues = {
     email: "",
     password: "",
 };
 
+type LoginStatus = {
+    kind: "error";
+    message: string;
+};
+
+function getLoginErrorMessage(error: unknown): string {
+    if (error instanceof TokenStorageError) {
+        return "Iniciaste sesión, pero no pudimos guardar tu sesión de forma segura. Intentá nuevamente.";
+    }
+
+    if (!axios.isAxiosError(error)) {
+        return "No pudimos iniciar sesión. Intentá nuevamente.";
+    }
+
+    switch (error.response?.status) {
+        case 401:
+            return "El correo o la contraseña son incorrectos.";
+        case 422:
+            return "Revisa el correo y la contraseña ingresados.";
+        case 429:
+            return "Demasiados intentos. Esperá un momento antes de volver a intentar.";
+        default:
+            return error.response
+                ? "No pudimos iniciar sesión. Intentá nuevamente."
+                : "No pudimos conectar con el servidor. Revisa tu conexión e intentá nuevamente.";
+    }
+}
+
 export default function LoginScreen() {
+    const router = useRouter();
     const { theme } = useTheme();
+    const { setAuthenticatedUser } = useAuth();
+    const submissionInProgress = useRef(false);
 
     return (
         <AuthScreenLayout
@@ -30,7 +70,30 @@ export default function LoginScreen() {
                 initialValues={initialValues}
                 validationSchema={loginSchema}
                 validateOnMount
-                onSubmit={async () => {}}
+                onSubmit={async (values, { setStatus }) => {
+                    if (submissionInProgress.current) return;
+
+                    submissionInProgress.current = true;
+                    setStatus(undefined);
+
+                    try {
+                        const response = await login({
+                            email: normalizeEmail(values.email),
+                            password: values.password,
+                        });
+
+                        await tokenStorage.save(response.access_token);
+                        setAuthenticatedUser(response.user);
+                        router.replace("/(app)/home");
+                    } catch (error) {
+                        setStatus({
+                            kind: "error",
+                            message: getLoginErrorMessage(error),
+                        });
+                    } finally {
+                        submissionInProgress.current = false;
+                    }
+                }}
             >
                 {({
                     values,
@@ -43,6 +106,7 @@ export default function LoginScreen() {
                     isValid,
                     isSubmitting,
                     dirty,
+                    status,
                 }) => (
                     <View
                         style={{
@@ -77,6 +141,17 @@ export default function LoginScreen() {
                                 void setFieldTouched("password", true)
                             }
                         />
+                        {status ? (
+                            <Text
+                                accessibilityRole="alert"
+                                style={{
+                                    color: theme.colors.error,
+                                    ...theme.typography.bodySmall,
+                                }}
+                            >
+                                {status.message}
+                            </Text>
+                        ) : null}
                         <Button
                             label="Iniciar sesión"
                             variant="auth"

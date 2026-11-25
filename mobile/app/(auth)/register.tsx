@@ -1,14 +1,23 @@
 import { Formik } from "formik";
-import { View } from "react-native";
+import axios from "axios";
+import { useRouter } from "expo-router";
+import { useRef } from "react";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { AuthFormField } from "@/features/auth/components/AuthFormField";
 import { AuthScreenLayout } from "@/features/auth/components/AuthScreenLayout";
 import { TermsCheckbox } from "@/features/auth/components/TermsCheckbox";
 import { registerSchema } from "@/features/auth/schemas/authSchemas";
+import { register } from "@/features/auth/services/authService";
 import type { RegisterFormValues } from "@/features/auth/types/forms";
 import { normalizeEmail } from "@/features/auth/utils/normalizeEmail";
+import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import {
+    tokenStorage,
+    TokenStorageError,
+} from "@/services/storage/tokenStorage";
 
 const initialValues: RegisterFormValues = {
     firstName: "",
@@ -19,8 +28,39 @@ const initialValues: RegisterFormValues = {
     termsAccepted: false,
 };
 
+type RegisterStatus = {
+    kind: "error";
+    message: string;
+};
+
+function getRegisterErrorMessage(error: unknown): string {
+    if (error instanceof TokenStorageError) {
+        return error.operation === "save"
+            ? "La cuenta se creó, pero no pudimos guardar la sesión de forma segura. Iniciá sesión para continuar."
+            : "No pudimos acceder al almacenamiento seguro. Intentá nuevamente.";
+    }
+
+    if (!axios.isAxiosError(error)) {
+        return "No pudimos completar el registro. Intentá nuevamente.";
+    }
+
+    switch (error.response?.status) {
+        case 409:
+            return "Ya existe una cuenta con ese correo electrónico. Probá iniciar sesión.";
+        case 422:
+            return "Revisá los datos ingresados y aceptá los términos y condiciones.";
+        default:
+            return error.response
+                ? "No pudimos completar el registro. Intentá nuevamente."
+                : "No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente. Si el registro llegó a completarse, probá iniciar sesión.";
+    }
+}
+
 export default function RegisterScreen() {
+    const router = useRouter();
     const { theme } = useTheme();
+    const { setAuthenticatedUser } = useAuth();
+    const submissionInProgress = useRef(false);
 
     return (
         <AuthScreenLayout
@@ -35,7 +75,33 @@ export default function RegisterScreen() {
                 initialValues={initialValues}
                 validationSchema={registerSchema}
                 validateOnMount
-                onSubmit={async () => {}}
+                onSubmit={async (values, { setStatus }) => {
+                    if (submissionInProgress.current) return;
+
+                    submissionInProgress.current = true;
+                    setStatus(undefined);
+
+                    try {
+                        const response = await register({
+                            first_name: values.firstName,
+                            last_name: values.lastName,
+                            email: normalizeEmail(values.email),
+                            password: values.password,
+                            terms_accepted: values.termsAccepted,
+                        });
+
+                        await tokenStorage.save(response.access_token);
+                        setAuthenticatedUser(response.user);
+                        router.replace("/(app)/home");
+                    } catch (error) {
+                        setStatus({
+                            kind: "error",
+                            message: getRegisterErrorMessage(error),
+                        } satisfies RegisterStatus);
+                    } finally {
+                        submissionInProgress.current = false;
+                    }
+                }}
             >
                 {({
                     values,
@@ -48,6 +114,7 @@ export default function RegisterScreen() {
                     isValid,
                     isSubmitting,
                     dirty,
+                    status,
                 }) => (
                     <View
                         style={{
@@ -130,6 +197,17 @@ export default function RegisterScreen() {
                                 );
                             }}
                         />
+                        {status?.kind === "error" ? (
+                            <Text
+                                accessibilityRole="alert"
+                                style={{
+                                    color: theme.colors.error,
+                                    ...theme.typography.bodySmall,
+                                }}
+                            >
+                                {status.message}
+                            </Text>
+                        ) : null}
                         <Button
                             label="Registrarme"
                             variant="auth"

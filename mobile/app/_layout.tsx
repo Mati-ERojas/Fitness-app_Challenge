@@ -1,16 +1,27 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider as ExpoThemeProvider } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  Stack,
+  ThemeProvider as ExpoThemeProvider,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
+
+export const unstable_settings = {
+  anchor: 'index',
+};
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,13 +33,16 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <RootLayoutNav />
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
 
 function RootLayoutNav() {
   const { theme } = useTheme();
+  const { status } = useAuth();
   const baseNavigationTheme = theme.colorScheme === 'dark' ? DarkTheme : DefaultTheme;
   const navigationTheme = {
     ...baseNavigationTheme,
@@ -45,17 +59,31 @@ function RootLayoutNav() {
 
   return (
     <ExpoThemeProvider value={navigationTheme}>
-      <StatusBar barStyle={theme.colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: theme.colors.background },
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-      </Stack>
+      <StatusBar
+        barStyle={theme.colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+      />
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: theme.colors.background },
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Protected
+            guard={status === 'authenticated'}
+            redirectTo={status === 'unauthenticated' ? '/(auth)/login' : '/'}
+          >
+            <Stack.Screen name="(app)" />
+          </Stack.Protected>
+          <Stack.Protected
+            guard={status === 'unauthenticated'}
+            redirectTo={status === 'authenticated' ? '/(app)/home' : '/'}
+          >
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+        </Stack>
+      </View>
     </ExpoThemeProvider>
   );
 }

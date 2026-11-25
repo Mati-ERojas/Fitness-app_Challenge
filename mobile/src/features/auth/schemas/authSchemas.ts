@@ -13,16 +13,27 @@ const passwordSchema = Yup.string()
   .min(12, 'La contraseña debe tener al menos 12 caracteres.')
   .required('La contraseña es obligatoria.');
 
+const registerPasswordSchema = passwordSchema.max(
+  128,
+  'La contraseña no puede superar los 128 caracteres.',
+);
+
 export const loginSchema = Yup.object({
   email: emailSchema,
   password: passwordSchema,
 });
 
 export const registerSchema = Yup.object({
-  firstName: Yup.string().trim().required('El nombre es obligatorio.'),
-  lastName: Yup.string().trim().required('El apellido es obligatorio.'),
+  firstName: Yup.string()
+    .trim()
+    .max(100, 'El nombre no puede superar los 100 caracteres.')
+    .required('El nombre es obligatorio.'),
+  lastName: Yup.string()
+    .trim()
+    .max(100, 'El apellido no puede superar los 100 caracteres.')
+    .required('El apellido es obligatorio.'),
   email: emailSchema,
-  password: passwordSchema,
+  password: registerPasswordSchema,
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password')], 'Las contraseñas no coinciden.')
     .required('Confirmá tu contraseña.'),
