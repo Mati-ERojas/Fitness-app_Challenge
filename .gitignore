@@ -8,7 +8,7 @@ venv/
 
 # Environment
 .env
-.env.*
+.env.local
 AGENTS.md
 
 # Database
